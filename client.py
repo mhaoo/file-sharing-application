@@ -39,10 +39,10 @@ def signUp(user,password,client):
     return accepted
 
 ######### tạo repo #################
-def createLocalRepo(folder, path):
-    if not os.path.exists(folder):
-        os.mkdir(folder)
-        path_to_repository = os.path.abspath("repository")
+def createLocalRepo(pathRepo, path):
+    if not os.path.exists(pathRepo):
+        os.mkdir(pathRepo)
+        path_to_repository = os.path.abspath(pathRepo)
         client.send(path_to_repository.encode(FORMAT))
         print(f'Local repository đã được tạo tại đường dẫn: {path}')
     else:
@@ -97,8 +97,8 @@ while True:
                 if command.startswith("create repository "):
                     args = shlex.split(command)
                     if len(args) >= 3:
-                        path = os.path.join("repository", args[2])
-                        createLocalRepo("repository", args[2])
+                        path = os.path.join(args[2], "repository")
+                        createLocalRepo(path, args[2])
                         break
                     else:
                         print('Lệnh không hợp lệ. Sử dụng lệnh "create repository <path>"')
