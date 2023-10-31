@@ -15,6 +15,7 @@ DISCONNECT = "x"
 SIGNUP = "signup"
 LOGIN = 'login'
 LOGOUT = "logout"
+FETCH = 'fetch'
 
 ######### login/ sign up #################
 def logIn(user, password,client):
@@ -46,6 +47,16 @@ def createLocalRepo(folder, path):
         print(f'Local repository đã được tạo tại đường dẫn: {path}')
     else:
         print(f'Đường dẫn {path} đã tồn tại repository, hãy thử đường dẫn khác.')
+
+#####################  fetch <filename> <username>    ##########################
+def fetch_(filename, username):
+    client.sendall(str(FETCH).encode(FORMAT))
+    client.sendall(username.encode(FORMAT))
+    client.recv(1024)
+    adr_IP = client.recv(1024).decode(format)
+    if(adr_IP == '-1'):
+        print(f'{username} mat ket noi')
+        return
 ###############################################
 
 
@@ -102,6 +113,13 @@ while True:
     if(functions == 'logout'):
         client.sendall(str(LOGOUT).encode(FORMAT))
         break
+    elif(functions[:9] == 'findOwner'):
+        hostname = functions[10:]
+    elif(functions[:5] == 'fetch'):
+        result = functions.split()
+        username = result[2]
+        filename = result[1]
+        fetch_(filename, username)
 
 
 print('end')
