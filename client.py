@@ -113,13 +113,22 @@ while True:
     if(functions == 'logout'):
         client.sendall(str(LOGOUT).encode(FORMAT))
         break
-    elif(functions[:9] == 'findOwner'):
-        hostname = functions[10:]
     elif(functions[:5] == 'fetch'):
         result = functions.split()
         username = result[2]
         filename = result[1]
         fetch_(filename, username)
+    elif functions.startswith("findOwner"):
+        filename = functions[10:]
+        client.sendall(str("findOwner " + filename).encode(FORMAT))
+
+        result_str = client.recv(1024).decode(FORMAT)
+        if (result_str == "Not user"):
+            print(result_str)
+        else:
+            result = result_str.split('\n')
+            for item in result:
+                print(item) 
 
 
 print('end')

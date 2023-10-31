@@ -174,6 +174,51 @@ def sendOwnerInform(conn,addr):
     else:
         conn.sendall('-1'.encode(format))
 
+###---------------list------------------###
+
+def listUser():
+    cursor.execute("select username from taikhoan")
+    result = cursor.fetchall()
+    if len(result) == 0:
+        print('Khong tim thay hostname!')
+    else:
+        for row in result:
+            print(row[0])  
+
+def listUserO ():
+    for row in Live_Account:
+        ip, id= row.split("-")
+        print(id)
+
+def listUserA ():
+    for row in Live_Account:
+        parse= row.find("-")
+        parse_check= row[(parse+1):]
+        print(parse_check)
+        discover(parse_check)
+
+###-------------get-----------_###
+def getUserInfom (user):
+    check = Check_LiveAccount(user)
+    if check == False:
+        for row in Live_Account:
+            ip, id= row.split("-")
+            if id== user: 
+                print(ip)
+    else:
+        print(user ,' not connect')
+
+def getOwner (filename):
+    cursor.execute("select username from ds_user  where file_name = %s",  (filename,))
+    result=cursor.fetchall()
+    if not result:
+        conn.sendall("Not user".encode(format))
+    else:
+        
+        result_str = "\n".join([str(row[0]) for row in result]) 
+        conn.sendall(result_str.encode(format)) 
+
+
 # ######## check conn############
 # def check_connections(user):
 #     if(not Live_Account):
@@ -230,6 +275,9 @@ def handleClient(conn, addr):
                     break
                 elif(option == FETCH):
                     sendOwnerInform(conn,addr)
+                elif option.startswith("findOwner"):
+                    filename = option[10:]
+                    getOwner(filename)
             except:
                 print(conn.getsockname(), "not connection")
                 Remove_LiveAccount(conn,addr)
@@ -253,6 +301,19 @@ def server_command_thread():
         elif(server_command[:8] == 'discover'):
             host_name = server_command[9:]
             discover(host_name)
+        elif(server_command[:9] == 'listUserO'):
+            listUserO()
+        elif(server_command[:9] == 'listUserA'):
+            listUserA()
+            
+        elif(server_command[:8] == 'listUser'):
+            listUser()
+        elif(server_command[:12] == 'getUserInfom'):
+            username = server_command[13:]
+            getUserInfom(username)
+        elif(server_command[:8] == 'getOwner'):
+            filename = server_command[9:]
+            getOwner(filename)
 
 
             
