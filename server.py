@@ -2,16 +2,16 @@ import socket
 import threading
 import _tkinter
 import mysql.connector
-
+import os
 ### mysql
-db = mysql.connector.connect(user = 'root', password = 'superhao2001', host = 'localhost', database = "socket_mmt")
+db = mysql.connector.connect(user = 'root', password = 'datle123@', host = 'localhost', database = "socket_mmt")
 print(db)
 cursor = db.cursor()
 
 SIGNUP = "signup"
 LOGIN = 'login'
 LOGOUT = "logout"
-
+FETCH = 'fetch'
 
 ##
 host = "127.0.0.1" #loopback
@@ -27,6 +27,12 @@ def Insert_New_Account(user,password):
     cursor.execute(sql, val)
     db.commit() 
 
+def Insert_ds_user(adr, user, path):
+    sql = "INSERT INTO ds_user(adr_IP, username ,file_name, path) VALUES (%s, %s, %s, %s)"
+    val = (adr, user, None ,path)
+    cursor.execute(sql, val)
+    db.commit()
+
 #### kiem tra ten dang ki co bi trung
 def check_clientSignUp(username):
     if username == "admin":
@@ -41,12 +47,6 @@ def check_clientSignUp(username):
             return 0
     return 1
 
-#### Lưu đường dẫn tới thư mục local repo vào database
-def Insert_ds_user(adr, username, path):
-    sql = "INSERT INTO ds_user(adr_IP, username ,file_name, path) VALUES (%s, %s, %s, %s)"
-    val = (str(adr), username, "", path)
-    cursor.execute(sql, val)
-    db.commit()
 
 Live_Account=[]
 ID=[]
@@ -99,38 +99,37 @@ def check_clientLogIn(username, password):
 def clientSignUp(conn, addr):
 
     user = conn.recv(1024).decode(format)
-    print("username:--" + user +"--")
+    print("username: --" + user + "--")
 
     conn.sendall(user.encode(format))
 
     pswd = conn.recv(1024).decode(format)
-    print("password:--" + pswd +"--")
+    print("password: --" + pswd + "--")
 
     accepted = check_clientSignUp(user)
     print("accept:", accepted)
-
-    conn.sendall(str(accepted).encode(format)) #new
-
+    conn.sendall(str(accepted).encode(format))
     if accepted == 1:
+        # Insert the user into the database with their repository path
         Insert_New_Account(user, pswd)
-        # add client sign up address to live account
         Ad.append(str(addr))
         ID.append(user)
-        account=str(Ad[Ad.__len__()-1])+"-"+str(ID[ID.__len__()-1])
+        account = str(Ad[Ad.__len__() - 1]) + "-" + str(ID[ID.__len__() - 1])
         Live_Account.append(account)
-
-        path_to_repository = conn.recv(1024).decode(format)
-        conn.sendall(path_to_repository.encode(format))
+        path = conn.recv(1024).decode(format)
+        conn.sendall(path.encode(format))
         parse_check = str(addr)
         parse_check = parse_check[2:]
         parse = parse_check.find("'")
         parse_check = parse_check[:parse]
         print(parse_check)
-        Insert_ds_user(str(parse_check), str(user), str(path_to_repository))
-
+        Insert_ds_user(str(parse_check), str(user), str(path))
+        
     print("end-SignUp()")
     return accepted
 
+def new_func(user):
+    return user
 ##login
 def clientLogIn(conn):
 
@@ -148,18 +147,30 @@ def clientLogIn(conn):
     print("end-logIn()")
     return accepted
 
-######## check conn############
-def check_connections(user):
-    if(not Live_Account):
-        print(user ,' not connect')
-    else:     
-        for row in Live_Account:
-            parse= row.find("-")
-            parse_check=row[(parse+1):]
-            if parse_check== user:
-                print(user, ' connect') 
-            else:
-                print(user ,' not connect')
+
+########   discover ####
+def discover(user):
+    cursor.execute("select file_name from ds_user  where username = %s",(user,))
+    result = cursor.fetchall()
+    if len(result) == 0:
+        print('Khong tim thay hostname!')
+    else:
+        print(user, ":", result)
+   
+def sendOwnerInform(conn,addr):
+    username = conn.recv(1024).decode(format)
+    conn.sendall(username.encode(format))
+    check_live = Check_LiveAccount(username)
+    if check_live == False:
+        cursor.execute("select adr_IP from ds_user  where username = %s",(username,))
+        parse= str(cursor.fetchone())
+        parse_check =parse[2:]
+        parse= parse_check.find("'")
+        parse_check= parse_check[:parse]
+        conn.sendall(parse_check.encode(format))
+    else:
+        conn.sendall('-1'.encode(format))
+
 
 ####--------------xu li-------####
 def handleClient(conn, addr):
@@ -183,7 +194,6 @@ def handleClient(conn, addr):
             elif option == SIGNUP:
                 check = clientSignUp(conn, addr)
                 if(check == 1):
-                    conn.sendall(str(check).encode(format))
                     print('Dang ki thanh cong!')
                     print("")
                     break
@@ -192,10 +202,10 @@ def handleClient(conn, addr):
                     print('Dang ki that bai!')
                     print("")
        except:
-           print(conn.getsockname(), "not connection")
-           Remove_LiveAccount(conn,addr)
-           conn.close()
-           return
+            print(conn.getsockname(), "not connection")
+            Remove_LiveAccount(conn,addr)
+            conn.close()
+            return
      ########### chuc nang #################
     while True:
             try:
@@ -203,8 +213,8 @@ def handleClient(conn, addr):
                 if(option == LOGOUT):
                     Remove_LiveAccount(conn,addr)
                     break
-
-
+                elif(option == FETCH):
+                    sendOwnerInform(conn,addr)
             except:
                 print(conn.getsockname(), "not connection")
                 Remove_LiveAccount(conn,addr)
@@ -219,9 +229,16 @@ def server_command_thread():
         server_command = input()
         if (server_command[:4] == 'ping'):
             host_name = server_command[5:]
-            check_connections(host_name)
+            check = Check_LiveAccount(host_name)
+            if check == False:
+                 print(host_name, ' connect') 
+            else:
+                 print(host_name ,' not connect')
 
-       # elif(server_command[:8] == 'discover '):
+        elif(server_command[:8] == 'discover'):
+            host_name = server_command[9:]
+            discover(host_name)
+
 
             
 ###----------------main------------------###

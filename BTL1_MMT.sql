@@ -25,8 +25,8 @@ DROP TABLE IF EXISTS `ds_user`;
 CREATE TABLE `ds_user` (
   `adr_IP` varchar(15) NOT NULL,
   `username` varchar(50) NOT NULL,
-  `file_name` varchar(50) NOT NULL,
-  `path` varchar(100) NOT NULL
+  `file_name` varchar(50) NULL,
+  `path` varchar(200) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
