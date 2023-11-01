@@ -16,6 +16,7 @@ SIGNUP = "signup"
 LOGIN = 'login'
 LOGOUT = "logout"
 FETCH = 'fetch'
+USER = ''
 
 ######### login/ sign up #################
 def logIn(user, password,client):
@@ -48,6 +49,19 @@ def createLocalRepo(pathRepo, path):
     else:
         print(f'Đường dẫn {path} đã tồn tại repository, hãy thử đường dẫn khác.')
 
+######### publish ###########
+# def publish_file(src_path, dest_filename):
+#     if not os.path.isfile(src_path):
+#         print(f"File '{src_path}' không tồn tại hoặc sai đường dẫn.")
+#         return
+
+#     client.sendall(f"publish {src_path} {dest_filename}".encode(FORMAT))
+#     response = client.recv(1024).decode(FORMAT)
+#     if response == "OK":
+#         print(f"File '{src_path}' published as '{dest_filename}' in the repository.")
+#     else:
+#         print(f"Failed to publish file.")
+
 #####################  fetch <filename> <username>    ##########################
 def fetch_(filename, username):
     client.sendall(str(FETCH).encode(FORMAT))
@@ -75,6 +89,7 @@ while True:
     if(select == '1'):
         print("username:")
         user = input()
+        USER = user
         print("password:")
         password = input()
         check = logIn(user, password,client)
@@ -86,6 +101,7 @@ while True:
     elif(select == '2'):
         print("username:")
         user = input()
+        USER = user
         print("password:")
         password = input()
         check = signUp(user, password,client)
@@ -98,7 +114,6 @@ while True:
                     args = shlex.split(command)
                     if len(args) >= 3:
                         path = os.path.join(args[2], "repository")
-                        print(path)
                         createLocalRepo(path, args[2])
                         break
                     else:
@@ -130,7 +145,19 @@ while True:
             result = result_str.split('\n')
             for item in result:
                 print(item) 
-
+    elif functions.startswith("publish"):
+        args = functions.split()
+        if len(args) == 3:
+            src_path = args[1]
+            dest_filename = args[2]
+            client.sendall(str("publish" + " " + src_path + " " + dest_filename + " " + USER).encode(FORMAT))
+            result = client.recv(1024).decode(FORMAT)
+            if result == "OK":
+                print(f'Đã thêm file {dest_filename} vào local repository')
+            else:
+                print(f'Thêm file {dest_filename} vào local repository thất bại')
+        else:
+            print('Lệnh không hợp lệ. Sử dụng lệnh "publish <path-to-filename1> <filename2>"')
 
 print('end')
 client.close()

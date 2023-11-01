@@ -3,6 +3,8 @@ import threading
 import _tkinter
 import mysql.connector
 import os
+import shlex
+from shutil import copy2
 
 ### mysql
 db = mysql.connector.connect(user = 'root', password = 'superhao2001', host = 'localhost', database = "socket_mmt")
@@ -48,6 +50,20 @@ def Update_repoPath(username, password, addr, path):
     val = (path, addr, username, password)
     cursor.execute(sql, val)
     db.commit()
+
+#### Copy file từ client sang local repository
+def publishFile(srcPath, destFileName, userName):
+    cursor.execute("SELECT path FROM TaiKhoan WHERE username = %s", (userName,))
+    result = cursor.fetchone()
+    path_value = result[0]
+    destPath = os.path.join(path_value, destFileName)
+    copy2(srcPath, destPath)
+    sql = "INSERT INTO ds_user(username, file_name) VALUES (%s, %s)"
+    val = (userName, destFileName)
+    cursor.execute(sql, val)
+    db.commit()
+    print(f'{userName} đã thêm file {destFileName} vào local repository')
+    conn.sendall("OK".encode(format))
 
 Live_Account=[]
 ID=[]
@@ -121,7 +137,6 @@ def clientSignUp(conn, addr):
         Live_Account.append(account)
 
         path_to_repository = conn.recv(1024).decode(format)
-        print(path_to_repository)
         conn.sendall(path_to_repository.encode(format))
         parse_check = str(addr)
         parse_check = parse_check[2:]
@@ -199,7 +214,7 @@ def listUserA ():
         discover(parse_check)
 
 ###-------------get-----------_###
-def getUserInfom (user):
+def getUserInform (user):
     check = Check_LiveAccount(user)
     if check == False:
         for row in Live_Account:
@@ -271,6 +286,7 @@ def handleClient(conn, addr):
     while True:
             try:
                 option = conn.recv(1024).decode(format)
+                parts = option.split(" ")
                 if(option == LOGOUT):
                     Remove_LiveAccount(conn,addr)
                     break
@@ -279,6 +295,11 @@ def handleClient(conn, addr):
                 elif option.startswith("findOwner"):
                     filename = option[10:]
                     getOwner(filename)
+                elif len(parts) == 4 and parts[0] == "publish":
+                    src_path = parts[1]
+                    dest_filename = parts[2]
+                    username = parts[3]
+                    publishFile(src_path, dest_filename, username)
             except:
                 print(conn.getsockname(), "not connection")
                 Remove_LiveAccount(conn,addr)
@@ -309,9 +330,9 @@ def server_command_thread():
             
         elif(server_command[:8] == 'listUser'):
             listUser()
-        elif(server_command[:12] == 'getUserInfom'):
+        elif(server_command[:12] == 'getUserInform'):
             username = server_command[13:]
-            getUserInfom(username)
+            getUserInform(username)
         elif(server_command[:8] == 'getOwner'):
             filename = server_command[9:]
             getOwner(filename)
