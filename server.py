@@ -23,8 +23,8 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 ## dang ki tai khoan
 def Insert_New_Account(user,password):
-    sql = "INSERT INTO TaiKhoan(username, password) VALUES (%s, %s)"
-    val = (user, password)
+    sql = "INSERT INTO TaiKhoan(username, password, addr_IP, path) VALUES (%s, %s, %s, %s)"
+    val = (user, password, "", "")
     cursor.execute(sql, val)
     db.commit() 
 
@@ -43,9 +43,9 @@ def check_clientSignUp(username):
     return 1
 
 #### Lưu đường dẫn tới thư mục local repo vào database
-def Insert_ds_user(adr, username, path):
-    sql = "INSERT INTO ds_user(adr_IP, username ,file_name, path) VALUES (%s, %s, %s, %s)"
-    val = (str(adr), username, "", path)
+def Update_repoPath(username, password, addr, path):
+    sql = "UPDATE TaiKhoan SET path = %s, addr_IP = %s WHERE username = %s AND password = %s"
+    val = (path, addr, username, password)
     cursor.execute(sql, val)
     db.commit()
 
@@ -121,13 +121,14 @@ def clientSignUp(conn, addr):
         Live_Account.append(account)
 
         path_to_repository = conn.recv(1024).decode(format)
+        print(path_to_repository)
         conn.sendall(path_to_repository.encode(format))
         parse_check = str(addr)
         parse_check = parse_check[2:]
         parse = parse_check.find("'")
         parse_check = parse_check[:parse]
         print(parse_check)
-        Insert_ds_user(str(parse_check), str(user), str(path_to_repository))
+        Update_repoPath(str(user), str(pswd), str(parse_check), str(path_to_repository))
 
     print("end-SignUp()")
     return accepted

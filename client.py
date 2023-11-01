@@ -98,6 +98,7 @@ while True:
                     args = shlex.split(command)
                     if len(args) >= 3:
                         path = os.path.join(args[2], "repository")
+                        print(path)
                         createLocalRepo(path, args[2])
                         break
                     else:
