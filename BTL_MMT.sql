@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.34, for Win64 (x86_64)
 --
--- Host: localhost    Database: socket_mmt
+-- Host: 127.0.0.1    Database: socket_mmt
 -- ------------------------------------------------------
 -- Server version	5.5.5-10.4.28-MariaDB
 
@@ -23,10 +23,8 @@ DROP TABLE IF EXISTS `ds_user`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `ds_user` (
-  `adr_IP` varchar(15) NOT NULL,
   `username` varchar(50) NOT NULL,
-  `file_name` varchar(50) NOT NULL,
-  `path` varchar(100) NOT NULL
+  `file_name` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -36,6 +34,7 @@ CREATE TABLE `ds_user` (
 
 LOCK TABLES `ds_user` WRITE;
 /*!40000 ALTER TABLE `ds_user` DISABLE KEYS */;
+INSERT INTO `ds_user` VALUES ('abc','tesst'),('abc','tesst'),('aaacc',''),('ddd',''),('sscc','');
 /*!40000 ALTER TABLE `ds_user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -48,7 +47,9 @@ DROP TABLE IF EXISTS `taikhoan`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `taikhoan` (
   `username` varchar(50) NOT NULL,
-  `password` varchar(50) NOT NULL
+  `password` varchar(50) NOT NULL,
+  `addr_IP` varchar(45) NOT NULL,
+  `path` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -58,7 +59,7 @@ CREATE TABLE `taikhoan` (
 
 LOCK TABLES `taikhoan` WRITE;
 /*!40000 ALTER TABLE `taikhoan` DISABLE KEYS */;
-INSERT INTO `taikhoan` VALUES ('abc','123'),('aaaa','1111'),('qw','11'),('qqqq','1111'),('112','1111'),('aaa','111111'),('t','111'),('a','121'),('22','123'),('ee','1111');
+INSERT INTO `taikhoan` VALUES ('abc','123','',''),('aaaa','1111','',''),('qw','11','',''),('qqqq','1111','',''),('112','1111','',''),('aaa','111111','',''),('t','111','',''),('a','121','',''),('22','123','',''),('ee','1111','',''),('1222','wwww','',''),('ewwe','wwww','',''),('ert','eee','',''),('122222','11','',''),('11111','22222','',''),('1111','2222222','',''),('111111','ssss','',''),('aaacc','aaa','',''),('fgg','ffff','',''),('qrrt','rrrr','',''),('11122','qqqq','',''),('fff','vvvv','',''),('ddf','ccccc','',''),('12dd','cccc','',''),('bbvv','xxxx','',''),('ddd','cccs','',''),('sscc','zzzzz','','');
 /*!40000 ALTER TABLE `taikhoan` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -71,4 +72,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-10-30 15:32:40
+-- Dump completed on 2023-11-01  0:59:12
