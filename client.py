@@ -521,8 +521,86 @@ def clien_cnn_client():
         except:
             print("Error")
             sock.close()
+###-------------2 cai cuc cuc--------------#
+
+
+def fetch_(client, filename, username):
+    client.sendall(str(FETCH).encode(FORMAT))
+    client.sendall(username.encode(FORMAT))
+    client.recv(1024)
+    adr_IP = client.recv(1024).decode(FORMAT)
+    client.sendall('thanhcong'.encode(FORMAT))
+    if(adr_IP == '-1'):
+        print(f'{username} mat ket noi')
+        return
+    path_des = client.recv(1024).decode(FORMAT)
+    client.sendall(USER.encode(FORMAT))
+    path_my = client.recv(1024).decode(FORMAT)
+    client.sendall('thanhcong'.encode(FORMAT))
+    path_des = path_des + '\\\\' 
+    path_des = path_des + str(filename)
+    path_my = path_my + '\\\\'
+    path_my = path_my + str(filename)
+
+    sock = socket.socket()
+    print ("Socket created successfully.")
+    port = 8000
+    sock.connect((adr_IP, port))
+    print('Connection Established.')
+    sock.sendall(path_des.encode(FORMAT))
+    sock.recv(1024)
+    
+    # file_size = int(sock.recv(1024).decode(FORMAT))
+    with open(path_my, 'wb') as file:
+        # bytes_received = 0
+        while True:
+            data = sock.recv(1024)
+            if not data:
+                break
+            file.write(data)
+            # bytes_received += len(data)
+            sock.send('ok'.encode(FORMAT))
+        print('File has been received successfully.')
+    
+    file.close()
+    sock.close()
+    print('Connection Closed.')
 
     
+def chuc_nang():
+    while True:
+        functions = input()
+        if(functions == 'logout'):
+            client.sendall(str(LOGOUT).encode(FORMAT))
+            break
+        elif(functions[:5] == 'fetch'):
+            result = functions.split()
+            username = result[2]
+            filename = result[1]
+            fetch_(client, filename, username)
+        # elif functions.startswith("findOwner"):
+        #     filename = functions[10:]
+        #     client.sendall(str("findOwner " + filename).encode(FORMAT))
+
+        #     result_str = client.recv(1024).decode(FORMAT)
+        #     if (result_str == "Not user"):
+        #         print(result_str)
+        #     else:
+        #         result = result_str.split('\n')
+        #         for item in result:
+        #             print(item) 
+        elif functions.startswith("publish"):
+            args = functions.split()
+            if len(args) == 3:
+                src_path = args[1]
+                dest_filename = args[2]
+                client.sendall(str("publish" + " " + dest_filename + " " + USER).encode(FORMAT))
+                result = client.recv(1024).decode(FORMAT)
+                print(result)
+                copy2(src_path, result)
+            else:
+                print('Lệnh không hợp lệ. Sử dụng lệnh "publish <path-to-filename1> <filename2>"')
+  
 
 
 
@@ -536,6 +614,10 @@ print("client address:",client.getsockname())
 
 
 thread_server = threading.Thread(target = clien_cnn_client)
+thread_server.daemon = False
+thread_server.start()
+
+thread_server = threading.Thread(target = chuc_nang)
 thread_server.daemon = False
 thread_server.start()
 

@@ -162,7 +162,7 @@ class StartPage(tk.Frame):
         if len(result) == 0:
             self.print_c('không tìm thấy gì hết!')
         else:
-            self.print_c(user, ":", result)
+            self.print_c((user, ":", result))
     def listUser_c(self):
         cursor.execute("select username from taikhoan")
         result = cursor.fetchall()
