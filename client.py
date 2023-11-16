@@ -11,7 +11,7 @@ from tkinter import ttk
 import threading
 from tkinter import filedialog
 #HOST = "192.168.137.1"  ###### IP cua server #######
-HOST = "localhost"
+HOST = "127.0.0.1"
 
 PORT = 10001
 HEADER = 64
@@ -332,6 +332,11 @@ class HomePage(tk.Frame):
        
         result = client.recv(1024).decode(FORMAT)
 
+        if result == 'trung_ten':
+            self.label_notice["text"] = "Filename already exists"
+            return
+        
+
         copy2(path_seclect, result)
         self.label_notice["text"] = "Completed!"
         self.frame_publish.pack_forget()
@@ -378,6 +383,63 @@ class HomePage(tk.Frame):
         return replaced_string
 
    
+    # def func_fetch(self):
+    #     selected_items = self.tree.selection()
+    #     if selected_items:
+    #         for item in selected_items:
+    #             filename, username, status = self.tree.item(item)['values']
+
+    #         client.sendall(str(FETCH).encode(FORMAT))
+    #         client.sendall(username.encode(FORMAT))
+    #         client.recv(1024)
+    #         adr_IP = client.recv(1024).decode(FORMAT)
+    #         client.sendall('thanhcong'.encode(FORMAT))
+    #         if(adr_IP == '-1'):
+    #             print(f'{username} mat ket noi')
+    #             self.label_notice["text"] = f'{username} not online'
+    #             return
+    #         path_des = client.recv(1024).decode(FORMAT)
+    #         client.sendall(USER.encode(FORMAT))
+    #         path_my = client.recv(1024).decode(FORMAT)
+    #         client.sendall('thanhcong'.encode(FORMAT))
+    #         path_des = path_des + '\\\\' 
+    #         path_des = path_des + str(filename)
+    #         path_my = path_my + '\\\\'
+    #         path_my = path_my + str(filename)
+
+    #         sock = socket.socket()
+    #         print ("Socket created successfully.")
+    #         port = 8000
+    #         sock.connect((adr_IP, port))
+    #         print('Connection Established.')
+    #         sock.sendall(path_des.encode(FORMAT))
+    #         sock.recv(1024)
+    #         with open(path_my, 'wb') as file:
+        
+    #          while True:
+    #             data = sock.recv(1024)
+    #             if not data:
+    #                 break
+    #             file.write(data)
+               
+    #             sock.send('ok'.encode(FORMAT))
+    #         print('File has been received successfully.')
+
+    #         self.tree.set(item, "Status", "Complete!")
+
+    #         client.sendall(filename.encode(FORMAT))
+    #         client.recv(1024)
+    #         client.sendall(USER.encode(FORMAT))
+    #         client.recv(1024)
+
+    #         file.close()
+    #         sock.close()
+    #         print('Connection Closed.')
+      
+    #     else:
+    #         print("No item selected.")
+    #         self.label_notice["text"] = "No item selected."
+
     def func_fetch(self):
         selected_items = self.tree.selection()
         if selected_items:
@@ -395,13 +457,22 @@ class HomePage(tk.Frame):
                 return
             path_des = client.recv(1024).decode(FORMAT)
             client.sendall(USER.encode(FORMAT))
-            path_my = client.recv(1024).decode(FORMAT)
+            path_my_re = client.recv(1024).decode(FORMAT)
             client.sendall('thanhcong'.encode(FORMAT))
             path_des = path_des + '\\\\' 
             path_des = path_des + str(filename)
-            path_my = path_my + '\\\\'
+            path_my = path_my_re + '\\\\'
             path_my = path_my + str(filename)
 
+            
+            count = 1
+            while os.path.exists(path_my):
+                base, ext = os.path.splitext(path_my)
+                new_base = base.split('(')[0]
+                temp_name = f"{new_base}({count}){ext}"
+                path_my = os.path.join(path_my_re, temp_name)
+                count += 1
+            
             sock = socket.socket()
             print ("Socket created successfully.")
             port = 8000
@@ -412,6 +483,7 @@ class HomePage(tk.Frame):
             with open(path_my, 'wb') as file:
         
              while True:
+
                 data = sock.recv(1024)
                 if not data:
                     break
@@ -421,16 +493,20 @@ class HomePage(tk.Frame):
             print('File has been received successfully.')
 
             self.tree.set(item, "Status", "Complete!")
+            filename = os.path.basename(path_my)
+            client.sendall(filename.encode(FORMAT))
+            client.recv(1024)
+            client.sendall(USER.encode(FORMAT))
+            client.recv(1024)
 
             file.close()
             sock.close()
             print('Connection Closed.')
-      
+
+
         else:
             print("No item selected.")
             self.label_notice["text"] = "No item selected."
-
-
 
 
     def findOwner(self):
@@ -521,8 +597,142 @@ def clien_cnn_client():
         except:
             print("Error")
             sock.close()
+###-------------2 cai cuc cuc--------------#
 
+
+# def fetch_(client, filename, username):
+#     client.sendall(str(FETCH).encode(FORMAT))
+#     client.sendall(username.encode(FORMAT))
+#     client.recv(1024)
+#     adr_IP = client.recv(1024).decode(FORMAT)
+#     client.sendall('thanhcong'.encode(FORMAT))
+#     if(adr_IP == '-1'):
+#         print(f'{username} mat ket noi')
+#         return
+#     path_des = client.recv(1024).decode(FORMAT)
+#     client.sendall(USER.encode(FORMAT))
+#     path_my = client.recv(1024).decode(FORMAT)
+#     client.sendall('thanhcong'.encode(FORMAT))
+#     path_des = path_des + '\\\\' 
+#     path_des = path_des + str(filename)
+#     path_my = path_my + '\\\\'
+#     path_my = path_my + str(filename)
+
+#     sock = socket.socket()
+#     print ("Socket created successfully.")
+#     port = 8000
+#     sock.connect((adr_IP, port))
+#     print('Connection Established.')
+#     sock.sendall(path_des.encode(FORMAT))
+#     sock.recv(1024)
     
+#     # file_size = int(sock.recv(1024).decode(FORMAT))
+#     with open(path_my, 'wb') as file:
+#         # bytes_received = 0
+#         while True:
+#             data = sock.recv(1024)
+#             if not data:
+#                 break
+#             file.write(data)
+#             # bytes_received += len(data)
+#             sock.send('ok'.encode(FORMAT))
+#         print('File has been received successfully.')
+    
+#     file.close()
+#     sock.close()
+#     print('Connection Closed.')
+
+def fetch_(client, filename, username):
+    client.sendall(str(FETCH).encode(FORMAT))
+    client.sendall(username.encode(FORMAT))
+    client.recv(1024)
+    adr_IP = client.recv(1024).decode(FORMAT)
+    client.sendall('thanhcong'.encode(FORMAT))
+    if(adr_IP == '-1'):
+        print(f'{username} mat ket noi')
+        return
+    path_des = client.recv(1024).decode(FORMAT)
+    client.sendall(USER.encode(FORMAT))
+    path_my_re = client.recv(1024).decode(FORMAT)
+    client.sendall('thanhcong'.encode(FORMAT))
+    path_des = path_des + '\\' 
+    path_des = path_des + str(filename)
+    path_my = path_my + '\\'
+    path_my = path_my + str(filename)
+    
+    count = 1
+    while os.path.exists(path_my):
+        base, ext = os.path.splitext(path_my)
+        new_base = base.split('(')[0]
+        temp_name = f"{new_base}({count}){ext}"
+        path_my = os.path.join(path_my_re, temp_name)
+        count += 1
+
+    sock = socket.socket()
+    print ("Socket created successfully.")
+    port = 8000
+    sock.connect((adr_IP, port))
+    print('Connection Established.')
+    sock.sendall(path_des.encode(FORMAT))
+    sock.recv(1024)
+    
+    # file_size = int(sock.recv(1024).decode(FORMAT))
+    with open(path_my, 'wb') as file:
+        # bytes_received = 0
+        while True:
+            data = sock.recv(1024)
+            if not data:
+                break
+            file.write(data)
+            # bytes_received += len(data)
+            sock.send('ok'.encode(FORMAT))
+        print('File has been received successfully.')
+    filename = os.path.basename(path_my)
+    client.sendall(filename.encode(FORMAT))
+    client.recv(1024)
+    client.sendall(USER.encode(FORMAT))
+    client.recv(1024)
+    file.close()
+    sock.close()
+    print('Connection Closed.')
+    
+def chuc_nang():
+    while True:
+        functions = input()
+        if(functions == 'logout'):
+            client.sendall(str(LOGOUT).encode(FORMAT))
+            break
+        elif(functions[:5] == 'fetch'):
+            result = functions.split()
+            username = result[2]
+            filename = result[1]
+            fetch_(client, filename, username)
+        # elif functions.startswith("findOwner"):
+        #     filename = functions[10:]
+        #     client.sendall(str("findOwner " + filename).encode(FORMAT))
+
+        #     result_str = client.recv(1024).decode(FORMAT)
+        #     if (result_str == "Not user"):
+        #         print(result_str)
+        #     else:
+        #         result = result_str.split('\n')
+        #         for item in result:
+        #             print(item) 
+        elif functions.startswith("publish"):
+            args = functions.split()
+            if len(args) == 3:
+                src_path = args[1]
+                dest_filename = args[2]
+                client.sendall(str("publish" + " " + dest_filename + " " + USER).encode(FORMAT))
+                result = client.recv(1024).decode(FORMAT)
+                # print(result)
+                if result == 'trung_ten':
+                    print ("Filename already exists")
+                else:
+                    copy2(src_path, result)
+            else:
+                print('Lệnh không hợp lệ. Sử dụng lệnh "publish <path-to-filename1> <filename2>"')
+  
 
 
 
@@ -536,6 +746,10 @@ print("client address:",client.getsockname())
 
 
 thread_server = threading.Thread(target = clien_cnn_client)
+thread_server.daemon = False
+thread_server.start()
+
+thread_server = threading.Thread(target = chuc_nang)
 thread_server.daemon = False
 thread_server.start()
 

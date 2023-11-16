@@ -14,7 +14,7 @@ import threading
 LARGE_FONT = ("verdana", 13,"bold")
 
 ### mysql
-db = mysql.connector.connect(user = 'root', password = 'superhao2001', host = 'localhost', database = "socket_mmt")
+db = mysql.connector.connect(user = 'root', password = 'datle123@', host = 'localhost', database = "socket_mmt")
 print(db)
 cursor = db.cursor()
 
@@ -78,7 +78,7 @@ class StartPage(tk.Frame):
         self.list_user = tk.Listbox(self, width=50)
         self.list_user.grid(row=2, column=3, columnspan=3)
 
-        label_command = tk.Label(self, text="   nhập gì đó", font=LARGE_FONT)
+        label_command = tk.Label(self, text="   Nhập lệnh", font=LARGE_FONT)
         label_command.grid(row=5, column=1)
         
 
@@ -115,6 +115,7 @@ class StartPage(tk.Frame):
             self.print_d(row)
     
     def add_button_(self):
+        self.list_comment.delete(0,tk.END)
         value = self.command.get()
         thamso = space_empty(value)
         if (value.startswith('ping ') or value=='ping'):
@@ -162,7 +163,7 @@ class StartPage(tk.Frame):
         if len(result) == 0:
             self.print_c('không tìm thấy gì hết!')
         else:
-            self.print_c(user, ":", result)
+            self.print_c((user, ":", result))
     def listUser_c(self):
         cursor.execute("select username from taikhoan")
         result = cursor.fetchall()
@@ -247,21 +248,36 @@ def Update_repoPath(username, password, addr, path):
 #### Copy file từ client sang local repository
 
 def publishFile(destFileName, userName):
-    cursor.execute("SELECT path FROM TaiKhoan WHERE username = %s", (userName,))
+    cursor.execute("SELECT file_name FROM ds_user WHERE username = %s", (userName,))
     result = cursor.fetchone()
+    file_exists = False  # Biến boolean để kiểm tra xem tên file đã tồn tại hay chưa
     if result is not None:
-        path_value = result[0]
-        destPath = os.path.join(path_value, destFileName)
-        conn.sendall(destPath.encode(format))
-        # copy2(srcPath, destPath)
-        sql = "INSERT INTO ds_user(username, file_name) VALUES (%s, %s)"
-        val = (userName, destFileName)
-        cursor.execute(sql, val)
-        db.commit()
-        print(f'{userName} đã thêm file {destFileName} vào local repository')
-        # conn.sendall("OK".encode(format))
+        for row in cursor:
+            parse=str(row)
+            parse_check =parse[2:]
+            parse= parse_check.find("'")
+            parse_check= parse_check[:parse]
+            if parse_check == destFileName:
+                file_exists = True
+                break
+
+    if file_exists:
+        conn.sendall('trung_ten'.encode(format))
     else:
-        print("Invalid message format")
+        cursor.execute("SELECT path FROM TaiKhoan WHERE username = %s", (userName,))
+        result = cursor.fetchone()
+        if result is not None:
+            path_value = result[0]
+            destPath = os.path.join(path_value, destFileName)
+            conn.sendall(destPath.encode(format))
+
+            sql = "INSERT INTO ds_user(username, file_name) VALUES (%s, %s)"
+            val = (userName, destFileName)
+            cursor.execute(sql, val)
+            db.commit()
+            print(f'{userName} đã thêm file {destFileName} vào local repository')
+        else:
+            print("Invalid message format")
 
 Live_Account=[]
 ID=[]
@@ -399,6 +415,16 @@ def sendOwnerInform(conn,addr):
         parse_check= parse_check[:parse]
         conn.sendall(parse_check.encode(format))
         conn.recv(1024)
+
+        file_name_ = conn.recv(1024).decode(format)
+        conn.sendall('thanhcong'.encode(format))
+        user_ = conn.recv(1024).decode(format)
+        conn.sendall('thanhcong'.encode(format))
+        sql = "INSERT INTO ds_user(username, file_name) VALUES (%s, %s)"
+        val = (user_, file_name_)
+        cursor.execute(sql, val)
+        db.commit()
+        
     else:
         conn.sendall('-1'.encode(format))
         conn.recv(1024)
